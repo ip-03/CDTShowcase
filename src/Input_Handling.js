@@ -1,17 +1,17 @@
-let up = false, down = false, leftKey = false, rightKey = false;
+let upKey = false, downKey = false, leftKey = false, rightKey = false;
 
 function keyPressed() {
   // p5 gives key as string; handle both uppercase and lowercase
-  if (key === 'w' || key === 'W') up = true;
-  if (key === 's' || key === 'S') down = true;
+  if (key === 'w' || key === 'W') upKey = true;
+  if (key === 's' || key === 'S') downKey = true;
   if (key === 'a' || key === 'A') leftKey = true;
   if (key === 'd' || key === 'D') rightKey = true;
   sendInput();
 }
 
 function keyReleased() {
-  if (key === 'w' || key === 'W') up = false;
-  if (key === 's' || key === 'S') down = false;
+  if (key === 'w' || key === 'W') upKey = false;
+  if (key === 's' || key === 'S') downKey = false;
   if (key === 'a' || key === 'A') leftKey = false;
   if (key === 'd' || key === 'D') rightKey = false;
   sendInput();
@@ -19,15 +19,16 @@ function keyReleased() {
 
 function sendInput() {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  if (!thisPlayer) return; // no local player yet
+  if (!thisPlayer) return;
 
   thisPlayer.vx = 0;
   thisPlayer.vy = 0;
 
-  if (up) thisPlayer.vy -= thisPlayer.baseSpeed;
-  if (down) thisPlayer.vy += thisPlayer.baseSpeed;
+  if (upKey) thisPlayer.vy -= thisPlayer.baseSpeed;
+  if (downKey) thisPlayer.vy += thisPlayer.baseSpeed;
   if (leftKey) thisPlayer.vx -= thisPlayer.baseSpeed;
   if (rightKey) thisPlayer.vx += thisPlayer.baseSpeed;
+  
 
   const input = {
     type: 'input',
