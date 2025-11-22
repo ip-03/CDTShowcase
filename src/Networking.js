@@ -21,8 +21,10 @@ function setupNetworking() {
         }
 
         const type = json.type;
-        if (!thisPlayerId && type === 'assignId') {
+        if (!thisPlayerId && type === 'init') {
             thisPlayerId = json.playerId;
+            worldWidth = json.worldWidth;
+            worldHeight = json.worldHeight;
             return;
         }
 
@@ -34,9 +36,11 @@ function setupNetworking() {
 
             const playersMap = {};
             json.players.forEach(p => {
-                playersMap[p.id] = { x: p.x, y: p.y };
+                playersMap[p.id] = { x: p.x, y: p.y, vx: p.vx, vy: p.vy };
                 if (!players[p.id]) {
                     players[p.id] = new Player(p.id, p.x, p.y);
+                    players[p.id].vx = p.vx;
+                    players[p.id].vy = p.vy;
                 }
                 if (!thisPlayer && p.id === thisPlayerId) {
                     thisPlayer = players[p.id];

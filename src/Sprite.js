@@ -56,7 +56,9 @@ class Sprite {
             this.currentFrame = this.startFrame;
             this.wasPlaying = false;
         }
-        pop();
+        if (dir === `left`) {
+            pop();
+        }
     }
 
     updateFrame() {

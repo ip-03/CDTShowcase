@@ -5,6 +5,8 @@ const players = {}; // map [id -> Player]
 const worldStateSS = []; // world snapshots (array of { time, players })
 let serverTimeOffset = 0; // serverTime - localTime
 let offsetReady = false;
+let worldWidth = 0;
+let worldHeight = 0;
 
 const INTERPOLATION_DELAY = 50; // ms
 
@@ -43,24 +45,20 @@ function updateWorld() {
     for (const id in ss0.players) {
         let p0 = ss0.players[id];
         let p1 = ss1.players[id] || p0;
+
         const newX = lerp(p0.x, p1.x, t);
         const newY = lerp(p0.y, p1.y, t);
+        const newVx = lerp(p0.vx, p1.vx, t);
+        const newVy = lerp(p0.vy, p1.vy, t);
 
-        // compute simple velocity delta (used for direction & animation)
-        const prevX = players[id].x;
-        const prevY = players[id].y;
-
-        players[id].update(newX, newY);
-
-        // store a crude velocity (delta per frame) so Player.draw can decide direction
-        players[id].vx = newX - prevX;
-        players[id].vy = newY - prevY;
-
-        // set sprite playing when the entity is moving
-        if (players[id].sprite) {
-            const moving = Math.abs(players[id].vx) > 0.001 || Math.abs(players[id].vy) > 0.001;
-            players[id].sprite.playing = moving;
+        if (!players[id]) {
+            players[id] = new Player(id, newX, newY);
+            if (!thisPlayer && id === thisPlayerId) {
+                thisPlayer = players[id];
+            }
         }
+
+        players[id].update(newX, newY, newVx, newVy);
 
         players[id].draw();
     }
