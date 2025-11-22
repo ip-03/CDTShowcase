@@ -3,20 +3,29 @@ const wss = new WebSocket.Server({ port: 4040 });
 console.log('WebSocket server is running on ws://localhost:4040');
 
 const TICK_RATE = 30;
-
-const players = {};
+const world = {};
+world.width = 3000;
+world.height = 3000;
+world.players = {};
 let lastPlayerId = 0;
 
 wss.on('connection', function connection(ws) {
     const playerId = `p${++lastPlayerId}`;
-    players[playerId] = { x: getRandomNumber(200, 600), y: getRandomNumber(150, 450), vx: 0, vy: 0 };
+    world.players[playerId] = { x: getRandomNumber(200, 600), y: getRandomNumber(150, 450), vx: 0, vy: 0 };
     ws.playerId = playerId;
-    ws.send(JSON.stringify({ type: 'assignId', playerId }));
+
+    const initMsg = {
+        type: 'init',
+        playerId: playerId,
+        worldWidth: world.width,
+        worldHeight: world.height
+    }
+    ws.send(JSON.stringify(initMsg));
 
     ws.on('message', function incoming(message) {
         const data = JSON.parse(message);
         if (data.type === 'input') {
-            const player = players[ws.playerId];
+            const player = world.players[ws.playerId];
             if (player) {
                 player.vx = data.vx;
                 player.vy = data.vy;
@@ -24,15 +33,15 @@ wss.on('connection', function connection(ws) {
         }
     });
     ws.on('close', function () {
-        delete players[ws.playerId];
+        delete world.players[ws.playerId];
     });
 });
 
 setInterval(() => {
     const now = Date.now();
     const dT = 1000 / TICK_RATE;
-    for (const playerId in players) {
-        const player = players[playerId];
+    for (const playerId in world.players) {
+        const player = world.players[playerId];
         player.x += player.vx * dT / 1000;
         player.y += player.vy * dT / 1000;
     }
@@ -40,10 +49,12 @@ setInterval(() => {
     const worldState = { 
         type: 'worldState',
         time: now, 
-        players: Object.entries(players).map(([id, p]) => ({ 
+        players: Object.entries(world.players).map(([id, p]) => ({ 
             id, 
             x: p.x, 
-            y: p.y 
+            y: p.y,
+            vx: p.vx, 
+            vy: p.vy
         })) 
     };
     const msg = JSON.stringify(worldState);
