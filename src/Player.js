@@ -1,6 +1,6 @@
 class Player extends Entity {
   constructor(id, x = 0, y = 0, vx = 0, vy = 0) {
-    super(id, x, y, false);
+    super(id, x, y, 'player', false);
     this._vx = vx;
     this._vy = vy;
     this._baseSpeed = 200.0; // px/s
@@ -39,8 +39,9 @@ class Player extends Entity {
     this._sprite.draw(this._x, this._y, this._direction, 0.04, 0.09);
   }
 
-  update(x, y, vx, vy) {
+  update(x, y, vx = 0, vy = 0) {
     super.update(x, y);
+    
     this._vx = vx;
     this._vy = vy;
   }

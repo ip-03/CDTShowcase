@@ -1,80 +1,111 @@
 let thisPlayerId = null;
 let thisPlayer = null;
 
-const players = {}; // map [id -> Player]
-const entityMaps = {}; // map [entityType -> map[id -> Entity]]}
-const worldStateSS = []; // world snapshots (array of { time, players })
 let serverTimeOffset = 0; // serverTime - localTime
 let offsetReady = false;
-let worldWidth = 0;
-let worldHeight = 0;
-
 const INTERPOLATION_DELAY = 50; // ms
 
-function updateWorld() {
-    const now = performance.now();
-    if (!offsetReady || worldStateSS.length < 2) return;
+class WorldState {
+    constructor() {
+        this._entitiesById = new Map();
+        this._entitiesByType = new Map();
+    }
 
-    const renderTime = now - serverTimeOffset - INTERPOLATION_DELAY;
+    addEntity(entity) {
+        this._entitiesById.set(entity.id, entity);
+        if (!this._entitiesByType.has(entity.type)) {
+            this._entitiesByType.set(entity.type, new Set());
+        }
+        this._entitiesByType.get(entity.type).add(entity);
+    }
 
-    let ss0 = null, ss1 = null;
-    for (let i = worldStateSS.length - 1; i >= 0; i--) {
-        const s = worldStateSS[i];
-        if (s.time <= renderTime) {
-            ss0 = s;
-            ss1 = worldStateSS[i + 1] || s;
-            break;
+    removeEntity(id) {
+        const entity = this._entitiesById.get(id);
+        if (entity) {
+            this._entitiesById.delete(id);
+            this._entitiesByType.get(entity.type).delete(entity);
         }
     }
-    if (!ss0) {
-        ss0 = worldStateSS[0];
-        ss1 = worldStateSS[1];
+    
+    getEntityById(id) {
+        return this._entitiesById.get(id) || null;
     }
 
-    let t = 0;
-    if (ss0 !== ss1) {
-        t = (renderTime - ss0.time) / (ss1.time - ss0.time);
-        t = constrain(t, 0, 1);
+    getEntitiesByType(type) {
+        return this._entitiesByType.get(type) || new Set();
+    }
+}
+
+class World extends WorldState {
+    constructor(wWidth, wHeight) {
+        super();
+        this._width = wWidth;
+        this._height = wHeight;
+        this._worldStateSS = new Array();
     }
 
-    entityMaps['player'] = players;
-    for (const type in entityMaps) {
-        const map = entityMaps[type];
-        for (const id in map) {
-            if (!ss0.entityMaps[type][id]) {
-                delete map[id];
+    get worldStateSS() {
+        return this._worldStateSS;
+    }
+
+    get width () {
+        return this._width;
+    }
+
+    get height () {
+        return this._height;
+    }
+
+    draw() {
+        const now = performance.now();
+        if (!offsetReady || this._worldStateSS.length < 2) return;
+        const renderTime = now - serverTimeOffset - INTERPOLATION_DELAY;
+
+        let ss0 = null, ss1 = null;
+        for (let i = this._worldStateSS.length - 1; i >= 0; i--) {
+            const s = this._worldStateSS[i];
+            if (s.time <= renderTime) {
+                ss0 = s;
+                ss1 = this._worldStateSS[i + 1] || s;
+                break;
             }
         }
-    }
+        if (!ss0) {
+            ss0 = this._worldStateSS[0];
+            ss1 = this._worldStateSS[1];
+        }
 
-    
-    for (const type in ss0.entityMaps) {
-        const map = ss0.entityMaps[type];
-        for (const id in map) {
-            let e0 = map[id];
-            let e1 = ss1.entityMaps[type][id] || e0;
+        let t = 0;
+        if (ss0 !== ss1) {
+            t = (renderTime - ss0.time) / (ss1.time - ss0.time);
+            t = constrain(t, 0, 1);
+        }
+        this._entitiesById.forEach((entity, id) => {
+            if(!ss0.worldState.getEntityById(id)) {
+                this.removeEntity(id);
+                return;
+            }
+
+            let e0 = ss0.worldState.getEntityById(id);
+            let e1 = ss1.worldState.getEntityById(id) || e0;
 
             const newX = lerp(e0.x, e1.x, t);
             const newY = lerp(e0.y, e1.y, t);
 
-            // if (!entityMaps[type][id]) {
-            //     if (type === 'player') {
-            //         entityMaps[type][id] = new Player(id, newX, newY);
-            //         if (!thisPlayer && id === thisPlayerId) {
-            //             thisPlayer = entityMaps[type][id];
-            //         }
-            //     }
-            // }           
-
-            let newVx = 0;
-            let newVy = 0;
-            if (type === 'player') {
-                newVx = lerp(e0.vx, e1.vx, t);
-                newVy = lerp(e0.vy, e1.vy, t);
-                entityMaps[type][id].update(newX, newY, newVx, newVy);
+            switch(entity._type) {
+                case 'player':
+                    let newVx = lerp(e0.vx, e1.vx, t);
+                    let newVy = lerp(e0.vy, e1.vy, t);
+                    entity.update(newX, newY, newVx, newVy);
+                    break;
+                default:
+                    entity.update(newX, newY);
+                    break;
             }
-
-            entityMaps[type][id].draw();
-        }
+            
+            entity.draw();
+        });
     }
+
+
 }

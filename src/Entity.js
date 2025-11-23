@@ -1,10 +1,11 @@
 class Entity {
-    constructor(id, x, y, visible = false) {
+    constructor(id, x, y, type, visible = false) {
         if(new.target === Entity) {
             throw new TypeError("Cannot construct Entity instances directly");
         }
 
         this._id = id;
+        this._type = type;
         this._x = x;
         this._y = y;
         this._visible = visible;
@@ -12,6 +13,10 @@ class Entity {
 
     get id() {
         return this._id;
+    }
+
+    get type() {
+        return this._type;
     }
 
     get x() {

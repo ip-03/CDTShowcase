@@ -40,6 +40,7 @@ class Sprite {
         if (this.frameCount == 1) {
             imageMode(CENTER);
             image(this.spritesheet, dir === `left` ? -x : x, y, this.frameWidth * xScale, this.frameHeight * yScale);
+            if (dir === `left`) pop();
             return;
         }
         const frameX = (this.currentFrame % this.cols) * this.frameWidth + this.frameWidth / 2;
@@ -47,7 +48,6 @@ class Sprite {
 
         imageMode(CENTER);
         image(this.spritesheet, dir === `left` ? -x : x, y, this.frameWidth * xScale, this.frameHeight * yScale, frameX - this.spriteWidth / 2, frameY - this.spriteHeight / 2, this.spriteWidth, this.spriteHeight);
-        console.log(`Drawing frame ${this.currentFrame} at (${x}, ${y})`);
         if (this.playing) {
             this.updateFrame();
             this.wasPlaying = true;

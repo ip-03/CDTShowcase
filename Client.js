@@ -1,9 +1,14 @@
 let camera;
+let world;
 
-function setup() {
+async function setup() {
   createCanvas(windowWidth, windowHeight);
   smooth();
-  setupNetworking();
+  try {
+    await setupNetworking();
+  } catch (err) {
+    console.error('Failed to setup networking:', err);
+  }
   camera = new Camera();
 }
 
@@ -11,4 +16,9 @@ function draw() {
   background(190);
   if (!thisPlayer) return;
   camera.update(thisPlayer.x, thisPlayer.y);
+  text('fps: ' + nf(frameRate(), 2, 2), 10, 20);
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }

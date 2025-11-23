@@ -22,7 +22,6 @@ function sendInput() {
   if (!thisPlayer) return;
 
   thisPlayer.update(thisPlayer.x, thisPlayer.y, 0, 0);
-  thisPlayer.update(thisPlayer.x, thisPlayer.y, 0, 0);
 
   let dirX = 0;
   let dirY = 0;
