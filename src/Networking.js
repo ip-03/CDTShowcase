@@ -34,20 +34,19 @@ function setupNetworking() {
                 offsetReady = true;
             }
 
-            const playersMap = {};
+            const playersSS = {};
+            const entityMapsSS = {};
             json.players.forEach(p => {
-                playersMap[p.id] = { x: p.x, y: p.y, vx: p.vx, vy: p.vy };
+                playersSS[p.id] = { x: p.x, y: p.y, vx: p.vx, vy: p.vy };
                 if (!players[p.id]) {
-                    players[p.id] = new Player(p.id, p.x, p.y);
-                    players[p.id].vx = p.vx;
-                    players[p.id].vy = p.vy;
+                    players[p.id] = new Player(p.id, p.x, p.y, p.vx, p.vy);
                 }
                 if (!thisPlayer && p.id === thisPlayerId) {
                     thisPlayer = players[p.id];
                 }
             });
-            // store a snapshot object: { time, players }
-            worldStateSS.push({ time: json.time, players: playersMap });
+            entityMapsSS['player'] = playersSS;
+            worldStateSS.push({ time: json.time, entityMaps: entityMapsSS });
         }
     };
 

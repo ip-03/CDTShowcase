@@ -21,13 +21,21 @@ function sendInput() {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
   if (!thisPlayer) return;
 
-  thisPlayer.vx = 0;
-  thisPlayer.vy = 0;
+  thisPlayer.update(thisPlayer.x, thisPlayer.y, 0, 0);
+  thisPlayer.update(thisPlayer.x, thisPlayer.y, 0, 0);
 
-  if (upKey) thisPlayer.vy -= thisPlayer.baseSpeed;
-  if (downKey) thisPlayer.vy += thisPlayer.baseSpeed;
-  if (leftKey) thisPlayer.vx -= thisPlayer.baseSpeed;
-  if (rightKey) thisPlayer.vx += thisPlayer.baseSpeed;
+  let dirX = 0;
+  let dirY = 0;
+  if (upKey) dirY -= 1;
+  if (downKey) dirY += 1;
+  if (leftKey) dirX -= 1;
+  if (rightKey) dirX += 1;
+  if (dirX !== 0 || dirY !== 0) {
+    const length = Math.hypot(dirX, dirY);
+    dirX /= length;
+    dirY /= length;
+    thisPlayer.update(thisPlayer.x, thisPlayer.y, dirX * thisPlayer.baseSpeed, dirY * thisPlayer.baseSpeed);
+  }
   
 
   const input = {

@@ -2,6 +2,7 @@ let thisPlayerId = null;
 let thisPlayer = null;
 
 const players = {}; // map [id -> Player]
+const entityMaps = {}; // map [entityType -> map[id -> Entity]]}
 const worldStateSS = []; // world snapshots (array of { time, players })
 let serverTimeOffset = 0; // serverTime - localTime
 let offsetReady = false;
@@ -36,30 +37,44 @@ function updateWorld() {
         t = constrain(t, 0, 1);
     }
 
-    for (const id in players) {
-        if (!ss0.players[id]) {
-            delete players[id];
+    entityMaps['player'] = players;
+    for (const type in entityMaps) {
+        const map = entityMaps[type];
+        for (const id in map) {
+            if (!ss0.entityMaps[type][id]) {
+                delete map[id];
+            }
         }
     }
 
-    for (const id in ss0.players) {
-        let p0 = ss0.players[id];
-        let p1 = ss1.players[id] || p0;
+    
+    for (const type in ss0.entityMaps) {
+        const map = ss0.entityMaps[type];
+        for (const id in map) {
+            let e0 = map[id];
+            let e1 = ss1.entityMaps[type][id] || e0;
 
-        const newX = lerp(p0.x, p1.x, t);
-        const newY = lerp(p0.y, p1.y, t);
-        const newVx = lerp(p0.vx, p1.vx, t);
-        const newVy = lerp(p0.vy, p1.vy, t);
+            const newX = lerp(e0.x, e1.x, t);
+            const newY = lerp(e0.y, e1.y, t);
 
-        if (!players[id]) {
-            players[id] = new Player(id, newX, newY);
-            if (!thisPlayer && id === thisPlayerId) {
-                thisPlayer = players[id];
+            // if (!entityMaps[type][id]) {
+            //     if (type === 'player') {
+            //         entityMaps[type][id] = new Player(id, newX, newY);
+            //         if (!thisPlayer && id === thisPlayerId) {
+            //             thisPlayer = entityMaps[type][id];
+            //         }
+            //     }
+            // }           
+
+            let newVx = 0;
+            let newVy = 0;
+            if (type === 'player') {
+                newVx = lerp(e0.vx, e1.vx, t);
+                newVy = lerp(e0.vy, e1.vy, t);
+                entityMaps[type][id].update(newX, newY, newVx, newVy);
             }
+
+            entityMaps[type][id].draw();
         }
-
-        players[id].update(newX, newY, newVx, newVy);
-
-        players[id].draw();
     }
 }
