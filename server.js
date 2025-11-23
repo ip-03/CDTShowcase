@@ -49,12 +49,13 @@ setInterval(() => {
     const worldState = { 
         type: 'worldState',
         time: now, 
-        players: Object.entries(world.players).map(([id, p]) => ({ 
-            id, 
-            x: p.x, 
-            y: p.y,
-            vx: p.vx, 
-            vy: p.vy
+        entities: Object.entries(world.players).map(([id, e]) => ({ 
+            id,
+            type: 'player',
+            x: e.x, 
+            y: e.y,
+            vx: e.vx, 
+            vy: e.vy
         })) 
     };
     const msg = JSON.stringify(worldState);
