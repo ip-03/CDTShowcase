@@ -1,48 +1,36 @@
 class Player extends Entity {
-  constructor(id, x = 0, y = 0, vx = 0, vy = 0) {
+  constructor(id, x = 0, y = 0) {
     super(id, x, y, 'player', false);
-    this._vx = vx;
-    this._vy = vy;
-    this._baseSpeed = 200.0; // px/s
-    this._sprite = new Sprite('assets/player_walking_spritesheet.png', 29, 8, 4, 20, true, false, 6, 28, 130, 232);
-    this._direction = 'right';
+
+    this._sprite = new Sprite('assets/player_walking_spritesheet.png', 29, 8, 4, 20, true, false, 6, 28, 130, 242, 3.5, -7);
+    this._facing = 'right';
   }
 
-
-  get baseSpeed() {
-    return this._baseSpeed;
+  get facing() {
+    return this._facing;
   }
-
-  get vx() {
-    return this._vx;
-  }
-
-  get vy() {
-    return this._vy;
-  }
-
-  get direction() {
-    return this._direction;
+  set facing(value) {
+    this._facing = value;
   }
 
   draw() {
-    if (this._vy !== 0 || this._vx !== 0) {
-      if (this._vx < 0) {
-        this._direction = 'left';
-      } else if (this._vx > 0) {
-        this._direction = 'right';
-      }
-      this._sprite.playing = true;
-    }else {
-      this._sprite.playing = false;
-    }
-    this._sprite.draw(this._x, this._y, this._direction, 0.04, 0.09);
+    this._sprite.draw(this._x, this._y, this._facing, 0.36, 0.3);
+    fill(0);
+    noStroke();
+    ellipse(this._x, this._y, 5, 5);
+    stroke(0);
+    fill(0, 255, 255, 77);
+    rect(this._x - 10, this._y - 24, 20, 48);
   }
 
-  update(x, y, vx = 0, vy = 0) {
+  update(x, y) {
+    let oldX = this._x;
+    let oldY = this._y;
     super.update(x, y);
-    
-    this._vx = vx;
-    this._vy = vy;
+    if (this._x !== oldX || this._y !== oldY) {
+      this._sprite.playing = true;
+    } else {
+      this._sprite.playing = false;
+    }
   }
 }

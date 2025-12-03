@@ -1,14 +1,16 @@
 let thisPlayerId = null;
-let thisPlayer = null;
 
 let serverTimeOffset = 0; // serverTime - localTime
-let offsetReady = false;
 const INTERPOLATION_DELAY = 50; // ms
 
 class WorldState {
     constructor() {
         this._entitiesById = new Map();
         this._entitiesByType = new Map();
+    }
+
+    getEntities() {
+        return Array.from(this._entitiesById.values());
     }
 
     addEntity(entity) {
@@ -26,7 +28,7 @@ class WorldState {
             this._entitiesByType.get(entity.type).delete(entity);
         }
     }
-    
+
     getEntityById(id) {
         return this._entitiesById.get(id) || null;
     }
@@ -48,17 +50,17 @@ class World extends WorldState {
         return this._worldStateSS;
     }
 
-    get width () {
+    get width() {
         return this._width;
     }
 
-    get height () {
+    get height() {
         return this._height;
     }
 
     draw() {
         const now = performance.now();
-        if (!offsetReady || this._worldStateSS.length < 2) return;
+        if (this._worldStateSS.length < 2) return;
         const renderTime = now - serverTimeOffset - INTERPOLATION_DELAY;
 
         let ss0 = null, ss1 = null;
@@ -81,7 +83,7 @@ class World extends WorldState {
             t = constrain(t, 0, 1);
         }
         this._entitiesById.forEach((entity, id) => {
-            if(!ss0.worldState.getEntityById(id)) {
+            if (!ss0.worldState.getEntityById(id)) {
                 this.removeEntity(id);
                 return;
             }
@@ -92,18 +94,19 @@ class World extends WorldState {
             const newX = lerp(e0.x, e1.x, t);
             const newY = lerp(e0.y, e1.y, t);
 
-            switch(entity._type) {
+            switch (entity.type) {
                 case 'player':
-                    let newVx = lerp(e0.vx, e1.vx, t);
-                    let newVy = lerp(e0.vy, e1.vy, t);
-                    entity.update(newX, newY, newVx, newVy);
+                    entity.update(newX, newY);
+                    entity.facing = e1.facing;
                     break;
                 default:
                     entity.update(newX, newY);
                     break;
             }
-            
+
             entity.draw();
+            console.log(`Entity ${id} position: (${newX.toFixed(2)}, ${newY.toFixed(2)})`);
+            console.log(thisPlayerId);
         });
     }
 

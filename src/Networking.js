@@ -5,7 +5,8 @@ function setupNetworking(timeoutMs = 10000) {
     return new Promise((resolve, reject) => {
         let resolved = false;
 
-        ws = new WebSocket('ws://143.179.181.40:4040');
+        //ws = new WebSocket('ws://143.179.181.40:4040');
+        ws = new WebSocket('ws://127.0.0.1:4040');
 
         const finish = () => {
             if (resolved) return;
@@ -43,41 +44,58 @@ function setupNetworking(timeoutMs = 10000) {
             if (!thisPlayerId && type === 'init') {
                 thisPlayerId = json.playerId;
                 world = new World(json.worldWidth, json.worldHeight);
-                return;
+                let firstState = new WorldState();
+                json.entities.forEach(e => {
+                    if (e.type === 'player') {
+                        const p = new Player(e.id, e.x, e.y);
+                        p.facing = e.facing;
+                        world.addEntity(p);
+                        firstState.addEntity({ id: e.id, type: 'player', x: e.x, y: e.y, facing: e.facing });
+                    }
+                });
+                world.worldStateSS.push({ time: json.time, worldState: firstState });
             }
 
-            if (type === 'worldState') {
-                if (!offsetReady) {
-                    serverTimeOffset = performance.now() - json.time;
-                    offsetReady = true;
-                }
+            if (type === 'tickEvents') {
+                let ssCount = world.worldStateSS.length;
+                if (ssCount === 0) return;
+                serverTimeOffset = performance.now() - json.time;
 
-                    const worldState = new WorldState();
-                    json.entities.forEach(e => {
-                        if (e.type === 'player') {
-                            const snap = { id: e.id, type: 'player', x: e.x, y: e.y, vx: e.vx, vy: e.vy };
-                            worldState.addEntity(snap);
+                const prevEntities = world.worldStateSS[ssCount - 1].worldState.getEntities();
+                const newState = new WorldState();
+                prevEntities.forEach(e => {
+                    newState.addEntity({ ...e });
+                });
 
-                            if (!world.getEntityById(e.id)) {
-                                const p = new Player(e.id, e.x, e.y, e.vx, e.vy);
-                                world.addEntity(p);
-                                if (!thisPlayer && e.id === thisPlayerId) {
-                                    thisPlayer = world.getEntityById(thisPlayerId);
-                                }
-                            } else {
-                                if (!thisPlayer && e.id === thisPlayerId) {
-                                    thisPlayer = world.getEntityById(thisPlayerId);
-                                }
-                            }
+                json.events.forEach(ev => {
+                    switch (ev.event) {
+                        case 'player.joined': {
+                            const p = new Player(ev.id, ev.x, ev.y);
+                            newState.addEntity({ id: ev.id, type: 'player', x: ev.x, y: ev.y, facing: ev.facing });
+                            world.addEntity(p);
+                            break;
                         }
-                    });
-                world.worldStateSS.push({ time: json.time, worldState: worldState });
+                        case 'player.left': {
+                            newState.removeEntity(ev.id);
+                            break;
+                        }
+                        case 'player.moved': {
+                            const p = newState.getEntityById(ev.id);
+                            if (p) {
+                                p.x = ev.x;
+                                p.y = ev.y;
+                                p.facing = ev.facing;
+                            }
+                            break;
+                        }
+                    }
+                });
+
+                world.worldStateSS.push({ time: json.time, worldState: newState });
                 if (world.worldStateSS.length > 50) {
                     world.worldStateSS.shift();
                 }
-                if (thisPlayer && offsetReady) {
-                    finish();
-                }
+                finish();
             }
         };
 

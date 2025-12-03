@@ -1,5 +1,5 @@
 class Sprite {
-    constructor(imagePath, frameCount = 1, rows = 1, cols = 1, fps = 1, loop = true, playing = true, startFrame = 0, endFrame = frameCount - 1, spriteWidth = 0, spriteHeight = 0) {
+    constructor(imagePath, frameCount = 1, rows = 1, cols = 1, fps = 1, loop = true, playing = true, startFrame = 0, endFrame = frameCount - 1, spriteWidth = 0, spriteHeight = 0, xOffset = 0, yOffset = 0 ) {
         this.spritesheet = null;
         this.imageLoaded = false;
 
@@ -18,6 +18,8 @@ class Sprite {
         this.lastUpdateTime = millis();
         this.playing = playing;
         this.wasPlaying = playing;
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;
 
         loadImage(imagePath, (img) => {
             this.spritesheet = img;
@@ -39,15 +41,16 @@ class Sprite {
         }
         if (this.frameCount == 1) {
             imageMode(CENTER);
-            image(this.spritesheet, dir === `left` ? -x : x, y, this.frameWidth * xScale, this.frameHeight * yScale);
+            image(this.spritesheet, (dir === `left` ? -x : x) + this.xOffset, y + this.yOffset, this.frameWidth * xScale, this.frameHeight * yScale);
             if (dir === `left`) pop();
             return;
         }
+
         const frameX = (this.currentFrame % this.cols) * this.frameWidth + this.frameWidth / 2;
         const frameY = Math.floor(this.currentFrame / this.cols) * this.frameHeight + this.frameHeight / 2;
 
         imageMode(CENTER);
-        image(this.spritesheet, dir === `left` ? -x : x, y, this.frameWidth * xScale, this.frameHeight * yScale, frameX - this.spriteWidth / 2, frameY - this.spriteHeight / 2, this.spriteWidth, this.spriteHeight);
+        image(this.spritesheet, (dir === `left` ? -x : x) + this.xOffset, y + this.yOffset, this.spriteWidth * xScale, this.spriteHeight * yScale, frameX - this.spriteWidth / 2, frameY - this.spriteHeight / 2, this.spriteWidth, this.spriteHeight);
         if (this.playing) {
             this.updateFrame();
             this.wasPlaying = true;

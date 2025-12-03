@@ -19,9 +19,6 @@ function keyReleased() {
 
 function sendInput() {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  if (!thisPlayer) return;
-
-  thisPlayer.update(thisPlayer.x, thisPlayer.y, 0, 0);
 
   let dirX = 0;
   let dirY = 0;
@@ -29,18 +26,11 @@ function sendInput() {
   if (downKey) dirY += 1;
   if (leftKey) dirX -= 1;
   if (rightKey) dirX += 1;
-  if (dirX !== 0 || dirY !== 0) {
-    const length = Math.hypot(dirX, dirY);
-    dirX /= length;
-    dirY /= length;
-    thisPlayer.update(thisPlayer.x, thisPlayer.y, dirX * thisPlayer.baseSpeed, dirY * thisPlayer.baseSpeed);
-  }
-  
 
   const input = {
     type: 'input',
-    vx: thisPlayer.vx,
-    vy: thisPlayer.vy
+    dirX: dirX,
+    dirY: dirY
   };
 
   ws.send(JSON.stringify(input));
