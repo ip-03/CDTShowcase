@@ -1,4 +1,4 @@
-let upKey = false, downKey = false, leftKey = false, rightKey = false;
+let upKey = false, downKey = false, leftKey = false, rightKey = false, mMoved = false;
 
 function keyPressed() {
   // p5 gives key as string; handle both uppercase and lowercase
@@ -6,7 +6,7 @@ function keyPressed() {
   if (key === 's' || key === 'S') downKey = true;
   if (key === 'a' || key === 'A') leftKey = true;
   if (key === 'd' || key === 'D') rightKey = true;
-  sendInput();
+  sendKBInput();
 }
 
 function keyReleased() {
@@ -14,10 +14,15 @@ function keyReleased() {
   if (key === 's' || key === 'S') downKey = false;
   if (key === 'a' || key === 'A') leftKey = false;
   if (key === 'd' || key === 'D') rightKey = false;
-  sendInput();
+  sendKBInput();
 }
 
-function sendInput() {
+function mouseMoved() {
+  mMoved = true;
+  sendMInput();
+}
+
+function sendKBInput() {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
   let dirX = 0;
@@ -28,9 +33,23 @@ function sendInput() {
   if (rightKey) dirX += 1;
 
   const input = {
-    type: 'input',
+    type: 'kbInput',
     dirX: dirX,
     dirY: dirY
+  };
+
+  ws.send(JSON.stringify(input));
+}
+
+function sendMInput() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+  mMoved = false;
+
+  const input = {
+    type: 'mInput',
+    mouseX: mouseX,
+    mouseY: mouseY
   };
 
   ws.send(JSON.stringify(input));

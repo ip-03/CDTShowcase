@@ -105,8 +105,6 @@ class World extends WorldState {
             }
 
             entity.draw();
-            console.log(`Entity ${id} position: (${newX.toFixed(2)}, ${newY.toFixed(2)})`);
-            console.log(thisPlayerId);
         });
     }
 

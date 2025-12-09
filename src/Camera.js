@@ -6,6 +6,7 @@ class Camera {
     }
     
     update(x, y) {
+        //console.log('Camera x:', this._x, 'y:', this._y, 'player x:', x, 'y:', y);
         this._x = lerp(this._x, x - windowWidth/2, this._lerpFactor);
         this._y = lerp(this._y, y - windowHeight/2, this._lerpFactor);
         this._x = constrain(this._x, 0, world.width - windowWidth);

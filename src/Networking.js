@@ -52,6 +52,10 @@ function setupNetworking(timeoutMs = 10000) {
                         world.addEntity(p);
                         firstState.addEntity({ id: e.id, type: 'player', x: e.x, y: e.y, facing: e.facing });
                     }
+                    if (e.type === 'barrier') {
+                        world.addEntity(new Barrier(e.id, e.x, e.y, 64, 64));
+                        firstState.addEntity({ id: e.id, type: 'barrier', x: e.x, y: e.y, width: 64, height: 64 });
+                    }
                 });
                 world.worldStateSS.push({ time: json.time, worldState: firstState });
             }
@@ -79,12 +83,19 @@ function setupNetworking(timeoutMs = 10000) {
                             newState.removeEntity(ev.id);
                             break;
                         }
-                        case 'player.moved': {
-                            const p = newState.getEntityById(ev.id);
-                            if (p) {
-                                p.x = ev.x;
-                                p.y = ev.y;
-                                p.facing = ev.facing;
+                        case 'entity.moved': {
+                            const e = newState.getEntityById(ev.id);
+                            if (e) {
+                                e.x = ev.x;
+                                e.y = ev.y;
+                                if(e.facing !== undefined) e.facing = ev.facing;
+                            }
+                            break;
+                        }
+                        case 'entity.attribute.changed': {
+                            const e = newState.getEntityById(ev.id);
+                            if (e) {
+                                e[ev.attribute] = ev.value;
                             }
                             break;
                         }

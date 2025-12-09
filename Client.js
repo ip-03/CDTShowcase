@@ -14,7 +14,7 @@ async function setup() {
 
 function draw() {
   background(190);
-  if (!camera) return;
+  if (!camera || !world || !world.getEntityById(thisPlayerId)) return;
   camera.update(world.getEntityById(thisPlayerId).x, world.getEntityById(thisPlayerId).y);
   text('fps: ' + nf(frameRate(), 2, 2), 10, 20);
 }
