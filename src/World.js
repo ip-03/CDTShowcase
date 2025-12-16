@@ -83,13 +83,16 @@ class World extends WorldState {
             t = constrain(t, 0, 1);
         }
         this._entitiesById.forEach((entity, id) => {
-            if (!ss0.worldState.getEntityById(id)) {
+            let e0 = ss0.worldState.getEntityById(id);
+            const e1 = ss1.worldState.getEntityById(id) || e0;
+
+            if(!e0){
+                return;
+            }
+            if(e0.removed){
                 this.removeEntity(id);
                 return;
             }
-
-            let e0 = ss0.worldState.getEntityById(id);
-            let e1 = ss1.worldState.getEntityById(id) || e0;
 
             const newX = lerp(e0.x, e1.x, t);
             const newY = lerp(e0.y, e1.y, t);
@@ -98,6 +101,9 @@ class World extends WorldState {
                 case 'player':
                     entity.update(newX, newY);
                     entity.facing = e1.facing;
+                    break;
+                case 'spell':
+                    entity.update(newX, newY);
                     break;
                 default:
                     entity.update(newX, newY);

@@ -1,15 +1,15 @@
 let camera;
 let world;
 
+window.addEventListener('load', () => {
+  setupNetworking().catch(err => {
+    console.error('Failed to setup networking:', err);
+  });
+});
+
 async function setup() {
   createCanvas(windowWidth, windowHeight);
   smooth();
-  try {
-    await setupNetworking();
-  } catch (err) {
-    console.error('Failed to setup networking:', err);
-  }
-  camera = new Camera();
 }
 
 function draw() {

@@ -1,6 +1,10 @@
 let ws = null;
 let connected = false;
 
+const spellRegistry = {
+    'mana_bolt': ManaBolt
+};
+
 function setupNetworking(timeoutMs = 10000) {
     return new Promise((resolve, reject) => {
         let resolved = false;
@@ -44,6 +48,7 @@ function setupNetworking(timeoutMs = 10000) {
             if (!thisPlayerId && type === 'init') {
                 thisPlayerId = json.playerId;
                 world = new World(json.worldWidth, json.worldHeight);
+                camera = new Camera(json.worldWidth, json.worldHeight);
                 let firstState = new WorldState();
                 json.entities.forEach(e => {
                     if (e.type === 'player') {
@@ -55,6 +60,12 @@ function setupNetworking(timeoutMs = 10000) {
                     if (e.type === 'barrier') {
                         world.addEntity(new Barrier(e.id, e.x, e.y, 64, 64));
                         firstState.addEntity({ id: e.id, type: 'barrier', x: e.x, y: e.y, width: 64, height: 64 });
+                    }
+                    if (e.type === 'spell') {
+                        const spell = new spellRegistry[e.name](e.id, e.x, e.y, e.angle);
+                        console.log('Spawning spell:', spell);
+                        world.addEntity(spell);
+                        firstState.addEntity({ id: e.id, type: 'spell', x: e.x, y: e.y});
                     }
                 });
                 world.worldStateSS.push({ time: json.time, worldState: firstState });
@@ -68,7 +79,7 @@ function setupNetworking(timeoutMs = 10000) {
                 const prevEntities = world.worldStateSS[ssCount - 1].worldState.getEntities();
                 const newState = new WorldState();
                 prevEntities.forEach(e => {
-                    newState.addEntity({ ...e });
+                    if (!e.removed) newState.addEntity({ ...e });
                 });
 
                 json.events.forEach(ev => {
@@ -80,7 +91,7 @@ function setupNetworking(timeoutMs = 10000) {
                             break;
                         }
                         case 'player.left': {
-                            newState.removeEntity(ev.id);
+                            newState.getEntityById(ev.id).removed = true;
                             break;
                         }
                         case 'entity.moved': {
@@ -99,9 +110,21 @@ function setupNetworking(timeoutMs = 10000) {
                             }
                             break;
                         }
+                        case 'entity.spawned': {
+                            if (ev.type === 'spell') {
+                                const spell = new spellRegistry[ev.name](ev.id, ev.x, ev.y, ev.angle);
+                                world.addEntity(spell);
+                                newState.addEntity({ id: ev.id, type: ev.type, x: ev.x, y: ev.y });
+                            }
+                            break;
+                        }
+                        case 'entity.removed': {
+                            newState.getEntityById(ev.id).removed = true;
+                            console.log(world.getEntities().length);
+                            break;
+                        }
                     }
                 });
-
                 world.worldStateSS.push({ time: json.time, worldState: newState });
                 if (world.worldStateSS.length > 50) {
                     world.worldStateSS.shift();

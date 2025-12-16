@@ -1,5 +1,5 @@
 class Entity {
-    constructor(id, x, y, type, visible = false) {
+    constructor(id, x, y, type, visible = false, angle = 0) {
         if(new.target === Entity) {
             throw new TypeError("Cannot construct Entity instances directly");
         }
@@ -9,6 +9,7 @@ class Entity {
         this._x = x;
         this._y = y;
         this._visible = visible;
+        this._angle = angle;
     }
 
     get id() {
@@ -30,9 +31,12 @@ class Entity {
     get visible() {
         return this._visible;
     }
-
     set visible(value) {
         this._visible = value;
+    }
+
+    get angle() {   
+        return this._angle;
     }
 
     update(x, y) {
