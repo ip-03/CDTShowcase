@@ -46,15 +46,16 @@ wss.on('connection', function connection(ws) {
 
     ws.on('message', function incoming(message) {
         const data = JSON.parse(message);
-        if (data.type === 'kbInput') {
+        if (data.type === 'input') {
             const p = world.getEntityById(ws.playerId);
             if (p) {
                 p.setVelocity(data.dirX, data.dirY);
-            }
-        } else if (data.type === 'mInput') {
-            const p = world.getEntityById(ws.playerId);
-            if (p) {
                 p.setFacing(data.mouseX);
+                if (data.mouseLeft) {
+                    p.castAttackSpell(data.mouseX, data.mouseY);
+                    console.log('Player', ws.playerId, 'cast a spell toward', data.mouseX, data.mouseY);
+                    console.log(`mouseX: ${data.mouseX}, mouseY: ${data.mouseY}`);
+                }
             }
         }
     });
@@ -83,6 +84,7 @@ setInterval(() => {
 
     oldPositions.forEach((pos, id) => {
         const e = world.getEntityById(id);
+        if (!e) return;
         if (e.x !== pos.x || e.y !== pos.y) {
             events.emit('entity.moved', {id: e.id, type: e.type, x: e.x, y: e.y, facing: e.facing ? e.facing : null});
         }
